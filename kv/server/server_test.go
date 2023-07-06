@@ -47,6 +47,7 @@ func cleanUpTestData(conf *config.Config) error {
 	return nil
 }
 
+// 查找已存在的key
 func TestRawGet1(t *testing.T) {
 	conf := config.NewTestConfig()
 	s := standalone_storage.NewStandAloneStorage(conf)
@@ -67,6 +68,7 @@ func TestRawGet1(t *testing.T) {
 	assert.Equal(t, []byte{42}, resp.Value)
 }
 
+// 查找不存在的key
 func TestRawGetNotFound1(t *testing.T) {
 	conf := config.NewTestConfig()
 	s := standalone_storage.NewStandAloneStorage(conf)
@@ -85,6 +87,7 @@ func TestRawGetNotFound1(t *testing.T) {
 	assert.True(t, resp.NotFound)
 }
 
+// 插入KV数据
 func TestRawPut1(t *testing.T) {
 	conf := config.NewTestConfig()
 	s := standalone_storage.NewStandAloneStorage(conf)
@@ -107,6 +110,7 @@ func TestRawPut1(t *testing.T) {
 	assert.Equal(t, []byte{42}, got)
 }
 
+// 先插入KV数据，再查询刚插入的key
 func TestRawGetAfterRawPut1(t *testing.T) {
 	conf := config.NewTestConfig()
 	s := standalone_storage.NewStandAloneStorage(conf)
@@ -148,6 +152,7 @@ func TestRawGetAfterRawPut1(t *testing.T) {
 	assert.Equal(t, []byte{44}, resp.Value)
 }
 
+// 先删除key，再查询刚删除的key
 func TestRawGetAfterRawDelete1(t *testing.T) {
 	conf := config.NewTestConfig()
 	s := standalone_storage.NewStandAloneStorage(conf)
@@ -176,6 +181,7 @@ func TestRawGetAfterRawDelete1(t *testing.T) {
 	assert.True(t, resp.NotFound)
 }
 
+// 删除key
 func TestRawDelete1(t *testing.T) {
 	conf := config.NewTestConfig()
 	s := standalone_storage.NewStandAloneStorage(conf)
@@ -200,6 +206,7 @@ func TestRawDelete1(t *testing.T) {
 	assert.Equal(t, []byte(nil), val)
 }
 
+// 范围查询
 func TestRawScan1(t *testing.T) {
 	conf := config.NewTestConfig()
 	s := standalone_storage.NewStandAloneStorage(conf)

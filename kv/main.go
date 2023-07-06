@@ -50,13 +50,16 @@ func main() {
 
 	var storage storage.Storage
 	if conf.Raft {
+		// Raft KV
 		storage = raft_storage.NewRaftStorage(conf)
 	} else {
+		// 单机KV
 		storage = standalone_storage.NewStandAloneStorage(conf)
 	}
 	if err := storage.Start(); err != nil {
 		log.Fatal(err)
 	}
+	// 创建 TinyKV 服务
 	server := server.NewServer(storage)
 
 	var alivePolicy = keepalive.EnforcementPolicy{
@@ -64,12 +67,14 @@ func main() {
 		PermitWithoutStream: true,            // Allow pings even when there are no active streams
 	}
 
+	// 创建 gRPC 服务
 	grpcServer := grpc.NewServer(
 		grpc.KeepaliveEnforcementPolicy(alivePolicy),
 		grpc.InitialWindowSize(1<<30),
 		grpc.InitialConnWindowSize(1<<30),
 		grpc.MaxRecvMsgSize(10*1024*1024),
 	)
+	// 将 TinyKV 服务注册到 gRPC 中
 	tinykvpb.RegisterTinyKvServer(grpcServer, server)
 	listenAddr := conf.StoreAddr[strings.IndexByte(conf.StoreAddr, ':'):]
 	l, err := net.Listen("tcp", listenAddr)
