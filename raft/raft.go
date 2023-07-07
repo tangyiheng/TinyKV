@@ -113,6 +113,8 @@ func (c *Config) validate() error {
 
 // Progress represents a follower’s progress in the view of the leader. Leader maintains
 // progresses of all followers, and sends entries to the follower based on its progress.
+// Progress 代表领导者对追随者的进展观察。
+// 领导者维护所有追随者的进度，并根据其进度向追随者发送条目。
 type Progress struct {
 	Match, Next uint64
 }
@@ -202,6 +204,13 @@ func newRaft(c *Config) *Raft {
 		leadTransferee:   0,
 		PendingConfIndex: 0,
 	}
+	// 初始化 Prs
+	for _, id := range c.peers {
+		r.Prs[id] = &Progress{
+			Match: 0,
+			Next:  0,
+		}
+	}
 	// 初始化raft实例角色（follower）
 	r.becomeFollower(r.Term, None)
 	return r
@@ -217,11 +226,17 @@ func (r *Raft) sendAppend(to uint64) bool {
 // sendHeartbeat sends a heartbeat RPC to the given peer.
 func (r *Raft) sendHeartbeat(to uint64) {
 	// Your Code Here (2A).
+	r.send(pb.Message{From: r.id, To: to, Term: r.Term, MsgType: pb.MessageType_MsgHeartbeat})
 }
 
 // tick advances the internal logical clock by a single tick.
 func (r *Raft) tick() {
 	// Your Code Here (2A).
+	if r.State == StateLeader {
+		r.tickHeartbeat()
+	} else {
+		r.tickElection()
+	}
 }
 
 // becomeFollower transform this peer's state to Follower

@@ -86,6 +86,8 @@ func TestStartAsFollower2AA(t *testing.T) {
 // TestLeaderBcastBeat tests that if the leader receives a heartbeat tick,
 // it will send a MessageType_MsgHeartbeat with m.Index = 0, m.LogTerm=0 and empty entries
 // as heartbeat to all followers.
+// 测试当领导者收到心跳信号时，它将向所有跟随者发送MessageType_MsgHeartbeat类型的消息
+// 其中m.Index = 0，m.LogTerm = 0，并且没有任何条目作为心跳信号。
 // Reference: section 5.2
 func TestLeaderBcastBeat2AA(t *testing.T) {
 	// heartbeat interval
