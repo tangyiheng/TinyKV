@@ -18,31 +18,39 @@ import pb "github.com/pingcap-incubator/tinykv/proto/pkg/eraftpb"
 
 // RaftLog manage the log entries, its struct look like:
 //
-//  snapshot/first.....applied....committed....stabled.....last
-//  --------|------------------------------------------------|
-//                            log entries
+//	snapshot/first.....applied....committed....stabled.....last
+//	--------|------------------------------------------------|
+//	                          log entries
 //
 // for simplify the RaftLog implement should manage all log entries
 // that not truncated
 type RaftLog struct {
 	// storage contains all stable entries since the last snapshot.
+	// 包含自上次快照以来所有稳定的日志条目
 	storage Storage
 
 	// committed is the highest log position that is known to be in
 	// stable storage on a quorum of nodes.
+	// 已知存在于节点仲裁中稳定存储中的最高日志位置
 	committed uint64
 
 	// applied is the highest log position that the application has
 	// been instructed to apply to its state machine.
 	// Invariant: applied <= committed
+	// 应用程序被指示应用于其状态机的最高日志位置
+	// 不变量：applied <= committed
 	applied uint64
 
 	// log entries with index <= stabled are persisted to storage.
 	// It is used to record the logs that are not persisted by storage yet.
 	// Everytime handling `Ready`, the unstabled logs will be included.
+	// 具有索引<=stabled的日志条目被持久化到存储storage中
+	// 它用于记录尚未由存储持久化的日志
+	// 每次处理`Ready`时，未持久化的日志将被包含在内
 	stabled uint64
 
 	// all entries that have not yet compact.
+	//尚未压缩的所有条目
 	entries []pb.Entry
 
 	// the incoming unstable snapshot, if any.
@@ -54,8 +62,29 @@ type RaftLog struct {
 
 // newLog returns log using the given storage. It recovers the log
 // to the state that it just commits and applies the latest snapshot.
+// 使用给定的存储返回日志。它将日志恢复到刚刚提交和应用最新快照的状态。
 func newLog(storage Storage) *RaftLog {
 	// Your Code Here (2A).
+	firstIndex, err := storage.FirstIndex()
+	if err != nil {
+		panic(err)
+	}
+	lastIndex, err := storage.LastIndex()
+	if err != nil {
+		panic(err)
+	}
+	entries, err := storage.Entries(firstIndex, lastIndex+1)
+	if err != nil {
+		panic(err)
+	}
+	return &RaftLog{
+		storage:         storage,
+		committed:       firstIndex - 1,
+		applied:         firstIndex - 1,
+		stabled:         lastIndex,
+		entries:         entries,
+		pendingSnapshot: nil,
+	}
 	return nil
 }
 

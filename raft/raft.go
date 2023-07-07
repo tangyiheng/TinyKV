@@ -16,7 +16,7 @@ package raft
 
 import (
 	"errors"
-
+	"github.com/pingcap-incubator/tinykv/log"
 	pb "github.com/pingcap-incubator/tinykv/proto/pkg/eraftpb"
 )
 
@@ -55,6 +55,10 @@ type Config struct {
 	// should only be set when starting a new raft cluster. Restarting raft from
 	// previous configuration will panic if peers is set. peer is private and only
 	// used for testing right now.
+	// peers包含raft集群中所有节点（包括自身）的ID。
+	// 只有在启动新的raft集群时才应设置它。
+	// 如果设置了peers，则从先前的配置重新启动raft将导致恐慌。
+	// peer是私有的，目前仅用于测试。
 	peers []uint64
 
 	// ElectionTick is the number of Node.Tick invocations that must pass between
@@ -63,10 +67,16 @@ type Config struct {
 	// candidate and start an election. ElectionTick must be greater than
 	// HeartbeatTick. We suggest ElectionTick = 10 * HeartbeatTick to avoid
 	// unnecessary leader switching.
+	// ElectionTick是在选举之间必须经过的Node.Tick调用次数。
+	// 也就是说，如果一个跟随者在ElectionTick经过之前没有收到当前任期的领导者的任何消息，它将成为候选人并开始选举。
+	// ElectionTick必须大于HeartbeatTick。我们建议将ElectionTick设置为10倍的HeartbeatTick，以避免不必要的领导者切换。
 	ElectionTick int
+
 	// HeartbeatTick is the number of Node.Tick invocations that must pass between
 	// heartbeats. That is, a leader sends heartbeat messages to maintain its
 	// leadership every HeartbeatTick ticks.
+	// HeartbeatTick是在心跳之间必须经过的Node.Tick调用次数。
+	// 也就是说，领导者每经过HeartbeatTick次调用就发送心跳消息以维持其领导地位。
 	HeartbeatTick int
 
 	// Storage is the storage for raft. raft generates entries and states to be
@@ -160,12 +170,39 @@ type Raft struct {
 }
 
 // newRaft return a raft peer with the given config
+// 通过给定的config新建一个raft的实例
 func newRaft(c *Config) *Raft {
 	if err := c.validate(); err != nil {
 		panic(err.Error())
 	}
 	// Your Code Here (2A).
-	return nil
+	// 创建（或恢复）raft log
+	log := newLog(c.Storage)
+	// 获取已保存的HardState信息：Term（任期），Vote（已投票id），Commit（已提交日志index）
+	// 获取已保存的ConfState信息：Nodes（节点id数组）
+	hs, _, err := c.Storage.InitialState()
+	if err != nil {
+		panic(err)
+	}
+	// 创建（或恢复）raft 实例
+	r := &Raft{
+		id:               c.ID, // raft节点id
+		Term:             0,
+		Vote:             hs.Vote,                    // 投票id
+		RaftLog:          log,                        // raft日志
+		Prs:              make(map[uint64]*Progress), // 集群同步进度信息
+		State:            StateFollower,              // 状态
+		votes:            make(map[uint64]bool),      // 投票数组
+		msgs:             nil,
+		Lead:             0,
+		heartbeatTimeout: c.HeartbeatTick,
+		electionTimeout:  c.ElectionTick,
+		heartbeatElapsed: 0,
+		electionElapsed:  0,
+		leadTransferee:   0,
+		PendingConfIndex: 0,
+	}
+	return r
 }
 
 // sendAppend sends an append RPC with new entries (if any) and the
@@ -188,17 +225,28 @@ func (r *Raft) tick() {
 // becomeFollower transform this peer's state to Follower
 func (r *Raft) becomeFollower(term uint64, lead uint64) {
 	// Your Code Here (2A).
+	r.reset(term)
+	log.Debugf("%x became follower at term %d", r.id, r.Term)
 }
 
 // becomeCandidate transform this peer's state to candidate
 func (r *Raft) becomeCandidate() {
 	// Your Code Here (2A).
+	r.reset(r.Term + 1)
+	log.Debugf("%x became candidate at term %d", r.id, r.Term)
 }
 
 // becomeLeader transform this peer's state to leader
 func (r *Raft) becomeLeader() {
 	// Your Code Here (2A).
 	// NOTE: Leader should propose a noop entry on its term
+	r.reset(r.Term)
+	log.Debugf("%x became leader at term %d", r.id, r.Term)
+}
+
+// reset 重置raft peer的状态
+func (r *Raft) reset(term uint64) {
+
 }
 
 // Step the entrance of handle message, see `MessageType`

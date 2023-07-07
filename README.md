@@ -10,7 +10,7 @@ TinyKV是什么？
 
 1. 单机KV
    1. 实现单机存储引擎
-   2. 实现KV服务的handlers
+   2. 实现KV服务处理程序（handler）
 2. 基于Raft的KV
    1. 实现基本的Raft算法
    2. 在Raft算法上构建一个容错的KV服务
@@ -21,7 +21,7 @@ TinyKV是什么？
    3. 实现一个基本的调度器
 4. 事务
    1. 实现一个MVCC层
-   2. 实现 KvGet、KvPrewrite、KvCommit请求的handlers
+   2. 实现 KvGet、KvPrewrite、KvCommit请求的处理程序（handler）
    3. 实现 KvScan、KvCheckTxnStatus、KvBatchRollback、KvResolveLock请求的handlers
 
 ## 架构

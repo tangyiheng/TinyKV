@@ -40,16 +40,21 @@ var ErrSnapshotTemporarilyUnavailable = errors.New("snapshot is temporarily unav
 
 // Storage is an interface that may be implemented by the application
 // to retrieve log entries from storage.
+// Storage是一个接口，应用程序可以实现它来从存储中检索日志条目
 //
 // If any Storage method returns an error, the raft instance will
 // become inoperable and refuse to participate in elections; the
 // application is responsible for cleanup and recovery in this case.
+// 如果任何Storage方法返回错误，raft实例将无法操作并拒绝参与选举
+// 在这种情况下，应用程序负责清理和恢复。
 type Storage interface {
 	// InitialState returns the saved HardState and ConfState information.
 	InitialState() (pb.HardState, pb.ConfState, error)
 	// Entries returns a slice of log entries in the range [lo,hi).
 	// MaxSize limits the total size of the log entries returned, but
 	// Entries returns at least one entry if any.
+	// Entries在范围[lo, hi)内返回日志条目的切片。
+	// MaxSize限制返回的日志条目的总大小，但如果有任何条目，Entries至少返回一个条目。
 	Entries(lo, hi uint64) ([]pb.Entry, error)
 	// Term returns the term of entry i, which must be in the range
 	// [FirstIndex()-1, LastIndex()]. The term of the entry before
@@ -57,11 +62,14 @@ type Storage interface {
 	// rest of that entry may not be available.
 	Term(i uint64) (uint64, error)
 	// LastIndex returns the index of the last entry in the log.
+	// LastIndex返回日志中最后一条条目的索引。
 	LastIndex() (uint64, error)
 	// FirstIndex returns the index of the first log entry that is
 	// possibly available via Entries (older entries have been incorporated
 	// into the latest Snapshot; if storage only contains the dummy entry the
 	// first log entry is not available).
+	// FirstIndex返回可能通过Entries获得的第一个日志条目的索引
+	//（较旧的条目已合并到最新的快照中；如果存储只包含虚拟条目，则第一个日志条目不可用）。
 	FirstIndex() (uint64, error)
 	// Snapshot returns the most recent snapshot.
 	// If snapshot is temporarily unavailable, it should return ErrSnapshotTemporarilyUnavailable,

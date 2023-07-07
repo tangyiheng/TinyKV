@@ -48,6 +48,8 @@ func TestLeaderUpdateTermFromMessage2AA(t *testing.T) {
 // smaller than the other’s, then it updates its current term to the larger
 // value. If a candidate or leader discovers that its term is out of date,
 // it immediately reverts to follower state.
+// 测试如果一个服务器的当前任期小于另一个服务器的任期，则将其当前任期更新为较大的值。
+// 如果候选人或领导者发现自己的任期已过时，则立即恢复为跟随者状态。
 // Reference: section 5.1
 func testUpdateTermFromMessage(t *testing.T, state StateType) {
 	r := newTestRaft(1, []uint64{1, 2, 3}, 10, 1, NewMemoryStorage())
