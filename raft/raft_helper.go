@@ -29,6 +29,13 @@ func (r *Raft) stepFollower(m pb.Message) error {
 	case pb.MessageType_MsgHup:
 		// 发起选举
 		r.campaign()
+	case pb.MessageType_MsgRequestVote:
+		// 判断是否投票
+		if (r.Vote == None && r.Lead == None) || r.Vote == m.From {
+			// 同意投票
+			r.send(pb.Message{To: m.From, Term: m.Term, MsgType: pb.MessageType_MsgRequestVoteResponse, Reject: false})
+		}
+		r.Vote = m.From
 	}
 	return nil
 }
@@ -38,6 +45,26 @@ func (r *Raft) stepCandidate(m pb.Message) error {
 	case pb.MessageType_MsgHup:
 		// 发起选举
 		r.campaign()
+	case pb.MessageType_MsgRequestVoteResponse:
+		// 更新投票情况
+		r.votes[m.From] = !m.Reject
+		// 检查投票结果
+		var granted, rejected int
+		for id, _ := range r.Prs {
+			if v, ok := r.votes[id]; ok {
+				if v {
+					granted++
+				} else {
+					rejected++
+				}
+			}
+		}
+		if granted > len(r.Prs)/2 { // 赢得选举
+			r.becomeLeader() // 成为leader
+			// TODO: 当选后添加空日志条目，并广播append消息
+		} else if rejected > len(r.Prs)/2 { // 输掉选举
+			r.becomeFollower(r.Term, None) // 成为follower
+		}
 	}
 	return nil
 }
@@ -97,6 +124,11 @@ func (r *Raft) campaign() {
 			// 给自己投票
 			r.Vote = r.id
 			r.votes[r.id] = true
+			// corner case：集群中只有一个节点
+			if len(r.Prs) == 1 {
+				r.becomeLeader()
+				return
+			}
 			continue
 		}
 		r.send(pb.Message{To: id, MsgType: pb.MessageType_MsgRequestVote})

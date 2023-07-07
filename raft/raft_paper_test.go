@@ -174,6 +174,10 @@ func testNonleaderStartElection(t *testing.T, state StateType) {
 // a) it wins the election
 // b) it loses the election
 // c) it is unclear about the result
+// 测试在一轮 RequestVote RPC 中可能发生的所有情况：
+// a.它赢得选举
+// b.它输掉选举
+// c.对于结果不清楚
 // Reference: section 5.2
 func TestLeaderElectionInOneRoundRPC2AA(t *testing.T) {
 	tests := []struct {
