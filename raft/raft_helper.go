@@ -62,6 +62,10 @@ func (r *Raft) stepCandidate(m pb.Message) error {
 		// 在等待选票的过程中，如果候选人收到来自另一台服务器的AppendEntries RPC
 		// 该服务器声称自己是领导者，并且任期至少与候选人当前任期一样大
 		r.becomeFollower(m.Term, m.From)
+	case pb.MessageType_MsgHeartbeat:
+		// 在等待选票的过程中，如果候选人收到来自另一台服务器的HeartBeat RPC
+		// 该服务器声称自己是领导者，并且任期至少与候选人当前任期一样大
+		r.becomeFollower(m.Term, m.From)
 	case pb.MessageType_MsgRequestVoteResponse:
 		// 更新投票情况
 		r.votes[m.From] = !m.Reject

@@ -562,10 +562,10 @@ func TestProposal2AB(t *testing.T) {
 }
 
 // TestHandleMessageType_MsgAppend ensures:
-// 1. Reply false if log doesn’t contain an entry at prevLogIndex whose term matches prevLogTerm.
-// 2. If an existing entry conflicts with a new one (same index but different terms),
-//    delete the existing entry and all that follow it; append any new entries not already in the log.
-// 3. If leaderCommit > commitIndex, set commitIndex = min(leaderCommit, index of last new entry).
+//  1. Reply false if log doesn’t contain an entry at prevLogIndex whose term matches prevLogTerm.
+//  2. If an existing entry conflicts with a new one (same index but different terms),
+//     delete the existing entry and all that follow it; append any new entries not already in the log.
+//  3. If leaderCommit > commitIndex, set commitIndex = min(leaderCommit, index of last new entry).
 func TestHandleMessageType_MsgAppend2AB(t *testing.T) {
 	tests := []struct {
 		m       pb.Message
@@ -758,6 +758,8 @@ func TestCandidateResetTermMessageType_MsgAppend2AA(t *testing.T) {
 // testCandidateResetTerm tests when a candidate receives a
 // MessageType_MsgHeartbeat or MessageType_MsgAppend from leader, "Step" resets the term
 // with leader's and reverts back to follower.
+// 测试当一个candidate收到一个来自leader的append消息或heartbeat消息时，
+// step将使用leader的term重置candidate的term，并且将candidate恢复为follower
 func testCandidateResetTerm(t *testing.T, mt pb.MessageType) {
 	a := newTestRaft(1, []uint64{1, 2, 3}, 10, 1, NewMemoryStorage())
 	b := newTestRaft(2, []uint64{1, 2, 3}, 10, 1, NewMemoryStorage())
