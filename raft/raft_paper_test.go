@@ -126,10 +126,13 @@ func TestCandidateStartNewElection2AA(t *testing.T) {
 // increments its current term and transitions to candidate state. It then
 // votes for itself and issues RequestVote RPCs in parallel to each of the
 // other servers in the cluster.
+// 测试如果一个追随者在选举超时期间没有收到任何通信，它将开始选举选择一个新的领导者。
+// 它增加当前任期并转换为候选人状态。然后它为自己投票，并并行向集群中的每个其他服务器发出RequestVote RPC。
 // Reference: section 5.2
 // Also if a candidate fails to obtain a majority, it will time out and
 // start a new election by incrementing its term and initiating another
 // round of RequestVote RPCs.
+// 此外，如果候选人未能获得多数票，它将超时并通过增加其任期并启动另一轮的RequestVote RPC来开始新的选举。
 // Reference: section 5.2
 func testNonleaderStartElection(t *testing.T, state StateType) {
 	// election timeout

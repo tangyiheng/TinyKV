@@ -211,7 +211,7 @@ func newRaft(c *Config) *Raft {
 			Next:  0,
 		}
 	}
-	// 初始化raft实例角色（follower）
+	// 初始化raft实例角色（follower）（当服务器程序启动时，他们都是跟随者身份）
 	r.becomeFollower(r.Term, None)
 	return r
 }
@@ -232,9 +232,9 @@ func (r *Raft) sendHeartbeat(to uint64) {
 // tick advances the internal logical clock by a single tick.
 func (r *Raft) tick() {
 	// Your Code Here (2A).
-	if r.State == StateLeader {
+	if r.State == StateLeader { // leader
 		r.tickHeartbeat()
-	} else {
+	} else { // follower 或 candidate
 		r.tickElection()
 	}
 }
