@@ -74,6 +74,7 @@ func testUpdateTermFromMessage(t *testing.T, state StateType) {
 }
 
 // TestStartAsFollower tests that when servers start up, they begin as followers.
+// 测试服务器启动时，它们开始作为跟随者。
 // Reference: section 5.2
 func TestStartAsFollower2AA(t *testing.T) {
 	r := newTestRaft(1, []uint64{1, 2, 3}, 10, 1, NewMemoryStorage())
