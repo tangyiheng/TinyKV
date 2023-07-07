@@ -328,6 +328,7 @@ func TestCandidatesElectionTimeoutNonconflict2AA(t *testing.T) {
 // testNonleadersElectionTimeoutNonconflict tests that in most cases only a
 // single server(follower or candidate) will time out, which reduces the
 // likelihood of split vote in the new election.
+// 测试在大多数情况下，只有一个服务器（跟随者或候选人）会超时，从而降低了新选举中出现分裂投票的可能性。
 // Reference: section 5.2
 func testNonleadersElectionTimeoutNonconflict(t *testing.T, state StateType) {
 	et := 10
