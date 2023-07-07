@@ -202,6 +202,8 @@ func newRaft(c *Config) *Raft {
 		leadTransferee:   0,
 		PendingConfIndex: 0,
 	}
+	// 初始化raft实例角色（follower）
+	r.becomeFollower(r.Term, None)
 	return r
 }
 
