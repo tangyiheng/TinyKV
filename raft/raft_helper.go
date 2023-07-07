@@ -34,8 +34,11 @@ func (r *Raft) stepFollower(m pb.Message) error {
 		if (r.Vote == None && r.Lead == None) || r.Vote == m.From {
 			// 同意投票
 			r.send(pb.Message{To: m.From, Term: m.Term, MsgType: pb.MessageType_MsgRequestVoteResponse, Reject: false})
+			r.Vote = m.From
+		} else {
+			// 拒绝投票
+			r.send(pb.Message{To: m.From, Term: m.Term, MsgType: pb.MessageType_MsgRequestVoteResponse, Reject: true})
 		}
-		r.Vote = m.From
 	}
 	return nil
 }

@@ -218,6 +218,7 @@ func TestLeaderElectionInOneRoundRPC2AA(t *testing.T) {
 
 // TestFollowerVote tests that each follower will vote for at most one
 // candidate in a given term, on a first-come-first-served basis.
+// 测试每个追随者在给定任期内最多只会为一个候选人投票，按照先到先服务的原则。
 // Reference: section 5.2
 func TestFollowerVote2AA(t *testing.T) {
 	tests := []struct {
