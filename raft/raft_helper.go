@@ -3,6 +3,7 @@ package raft
 import (
 	"github.com/pingcap-incubator/tinykv/log"
 	pb "github.com/pingcap-incubator/tinykv/proto/pkg/eraftpb"
+	"math/rand"
 )
 
 // send 发送消息
@@ -22,6 +23,15 @@ func (r *Raft) reset(term uint64) {
 	if term != r.Term {
 		r.Term = term
 	}
+	// 重置投票信息
+	r.Vote = None
+	r.votes = make(map[uint64]bool)
+	// 重置领导
+	r.Lead = None
+	// 重置定时器
+	r.heartbeatElapsed = 0
+	r.electionElapsed = 0
+	r.resetRandomElectionTimeout()
 }
 
 func (r *Raft) stepFollower(m pb.Message) error {
@@ -92,7 +102,7 @@ func (r *Raft) stepLeader(m pb.Message) error {
 func (r *Raft) tickElection() {
 	r.electionElapsed++
 	// 选举超时
-	if r.electionElapsed >= r.electionTimeout {
+	if r.electionElapsed >= r.randomElectionTimeout {
 		r.electionElapsed = 0
 		// 如果发生选举超时，节点应该将'MessageType_MsgHup'传递给其Step方法并开始新的选举。
 		r.Step(pb.Message{From: r.id, MsgType: pb.MessageType_MsgHup})
@@ -140,4 +150,8 @@ func (r *Raft) campaign() {
 		}
 		r.send(pb.Message{To: id, MsgType: pb.MessageType_MsgRequestVote})
 	}
+}
+
+func (r *Raft) resetRandomElectionTimeout() {
+	r.randomElectionTimeout = r.electionTimeout + rand.Intn(r.electionTimeout)
 }

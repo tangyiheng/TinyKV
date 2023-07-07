@@ -147,6 +147,8 @@ type Raft struct {
 	heartbeatTimeout int
 	// baseline of election interval
 	electionTimeout int
+	// 随机选举超时时间
+	randomElectionTimeout int
 	// number of ticks since it reached last heartbeatTimeout.
 	// only leader keeps heartbeatElapsed.
 	heartbeatElapsed int
@@ -188,21 +190,22 @@ func newRaft(c *Config) *Raft {
 	}
 	// 创建（或恢复）raft 实例
 	r := &Raft{
-		id:               c.ID, // raft节点id
-		Term:             0,
-		Vote:             hs.Vote,                    // 投票id
-		RaftLog:          log,                        // raft日志
-		Prs:              make(map[uint64]*Progress), // 集群同步进度信息
-		State:            StateFollower,              // 状态
-		votes:            make(map[uint64]bool),      // 投票数组
-		msgs:             nil,
-		Lead:             0,
-		heartbeatTimeout: c.HeartbeatTick,
-		electionTimeout:  c.ElectionTick,
-		heartbeatElapsed: 0,
-		electionElapsed:  0,
-		leadTransferee:   0,
-		PendingConfIndex: 0,
+		id:                    c.ID, // raft节点id
+		Term:                  0,
+		Vote:                  hs.Vote,                    // 投票id
+		RaftLog:               log,                        // raft日志
+		Prs:                   make(map[uint64]*Progress), // 集群同步进度信息
+		State:                 StateFollower,              // 状态
+		votes:                 make(map[uint64]bool),      // 投票数组
+		msgs:                  nil,
+		Lead:                  0,
+		heartbeatTimeout:      c.HeartbeatTick,
+		electionTimeout:       c.ElectionTick,
+		randomElectionTimeout: 0,
+		heartbeatElapsed:      0,
+		electionElapsed:       0,
+		leadTransferee:        0,
+		PendingConfIndex:      0,
 	}
 	// 初始化 Prs
 	for _, id := range c.peers {

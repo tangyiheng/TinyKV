@@ -289,6 +289,7 @@ func TestCandidateElectionTimeoutRandomized2AA(t *testing.T) {
 
 // testNonleaderElectionTimeoutRandomized tests that election timeout for
 // follower or candidate is randomized.
+// 测试追随者或候选人的选举超时是随机的。
 // Reference: section 5.2
 func testNonleaderElectionTimeoutRandomized(t *testing.T, state StateType) {
 	et := 10
