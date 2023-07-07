@@ -274,11 +274,18 @@ func (r *Raft) Step(m pb.Message) error {
 	// 判断任期
 	switch {
 	case m.Term == 0:
+	// 本地消息
 	case m.Term > r.Term:
+		// 更高任期的消息
 		// 如果一个服务器的当前任期小于另一个服务器的任期，则将其当前任期更新为较大的值
 		// 如果候选人或领导者发现自己的任期已过时，则立即恢复为跟随者状态。
 		log.Debugf("%x [term: %d] received a %s message with higher term from %x [term: %d]", r.id, r.Term, m.MsgType, m.From, m.Term)
-		r.becomeFollower(m.Term, None)
+		if m.MsgType == pb.MessageType_MsgRequestVote {
+			r.becomeFollower(m.Term, None)
+		} else if m.MsgType == pb.MessageType_MsgAppend {
+			// TestCandidateFallback2AA
+			r.becomeFollower(m.Term, m.From)
+		}
 	case m.Term < r.Term:
 		return nil
 	}

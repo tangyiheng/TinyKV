@@ -254,6 +254,8 @@ func TestFollowerVote2AA(t *testing.T) {
 // if a candidate receives an AppendEntries RPC from another server claiming
 // to be leader whose term is at least as large as the candidate's current term,
 // it recognizes the leader as legitimate and returns to follower state.
+// 测试在等待选票的过程中，如果候选人收到来自另一台服务器的AppendEntries RPC，
+// 该服务器声称自己是领导者，并且任期至少与候选人当前任期一样大，那么候选人将认可该领导者为合法，并返回追随者状态。
 // Reference: section 5.2
 func TestCandidateFallback2AA(t *testing.T) {
 	tests := []pb.Message{
