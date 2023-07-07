@@ -225,14 +225,18 @@ func (r *Raft) tick() {
 // becomeFollower transform this peer's state to Follower
 func (r *Raft) becomeFollower(term uint64, lead uint64) {
 	// Your Code Here (2A).
-	r.reset(term)
+	r.reset(term)           // 设置term
+	r.Lead = lead           // 设置lead
+	r.State = StateFollower // 设置为follower状态
 	log.Debugf("%x became follower at term %d", r.id, r.Term)
 }
 
 // becomeCandidate transform this peer's state to candidate
 func (r *Raft) becomeCandidate() {
 	// Your Code Here (2A).
-	r.reset(r.Term + 1)
+	r.reset(r.Term + 1)      // 设置term（自增）
+	r.Vote = r.id            // 设置lead（给自己投票）
+	r.State = StateCandidate // 设置为follower状态
 	log.Debugf("%x became candidate at term %d", r.id, r.Term)
 }
 
@@ -240,23 +244,39 @@ func (r *Raft) becomeCandidate() {
 func (r *Raft) becomeLeader() {
 	// Your Code Here (2A).
 	// NOTE: Leader should propose a noop entry on its term
-	r.reset(r.Term)
+	r.reset(r.Term)       // 设置term
+	r.Lead = r.id         // 设置lead为自身
+	r.State = StateLeader // 设置为leader状态
 	log.Debugf("%x became leader at term %d", r.id, r.Term)
-}
-
-// reset 重置raft peer的状态
-func (r *Raft) reset(term uint64) {
-
 }
 
 // Step the entrance of handle message, see `MessageType`
 // on `eraftpb.proto` for what msgs should be handled
 func (r *Raft) Step(m pb.Message) error {
 	// Your Code Here (2A).
-	switch r.State {
-	case StateFollower:
-	case StateCandidate:
-	case StateLeader:
+	// 判断任期
+	switch {
+	case m.Term == 0:
+	case m.Term > r.Term:
+		// 如果一个服务器的当前任期小于另一个服务器的任期，则将其当前任期更新为较大的值
+		// 如果候选人或领导者发现自己的任期已过时，则立即恢复为跟随者状态。
+		log.Debugf("%x [term: %d] received a %s message with higher term from %x [term: %d]", r.id, r.Term, m.MsgType, m.From, m.Term)
+		r.becomeFollower(m.Term, None)
+	case m.Term < r.Term:
+		return nil
+	}
+	// 判断消息类型
+	switch m.MsgType {
+	default:
+		// 判断raft节点状态
+		switch r.State {
+		case StateFollower:
+			return r.stepFollower(m)
+		case StateCandidate:
+			return r.stepCandidate(m)
+		case StateLeader:
+			return r.stepLeader(m)
+		}
 	}
 	return nil
 }
